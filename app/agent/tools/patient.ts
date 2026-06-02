@@ -43,6 +43,7 @@ REQUIREMENTS:
   - phone
   - gender
 - Multiple parameters may be provided together to narrow the search and improve accuracy.
+- If the given name is giving any results from the api before saying no information try the last name in first name and the first name in the last name to account for user error in inputting the name.
 
 RESTRICTED DATA:
 - medicalRecordNum is considered restricted information.

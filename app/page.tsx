@@ -5,6 +5,153 @@ import { runAgent } from "./agent/run";
 import type { UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
 
+// Parse markdown table syntax and render as React component
+function parseAndRenderMarkdownTables(text: string): React.ReactNode[] {
+  const lines = text.split("\n");
+  const result: React.ReactNode[] = [];
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i].trim();
+
+    // Detect table start (line starts with |)
+    if (line.startsWith("|")) {
+      const tableLines: string[] = [];
+      let j = i;
+
+      // Collect all consecutive table lines
+      while (j < lines.length && lines[j].trim().startsWith("|")) {
+        tableLines.push(lines[j].trim());
+        j++;
+      }
+
+      if (tableLines.length >= 2) {
+        // Parse table
+        const headerRow = parseTableRow(tableLines[0]);
+        const rows: string[][] = [];
+
+        // Skip separator row (usually index 1) and parse data rows
+        for (let k = 2; k < tableLines.length; k++) {
+          const row = parseTableRow(tableLines[k]);
+          if (row.length > 0) {
+            rows.push(row);
+          }
+        }
+
+        if (headerRow.length > 0) {
+          result.push(
+            <div key={`table-${i}`} className="mb-4 overflow-x-auto">
+              <table className="min-w-full border-collapse border border-amber-300 bg-white">
+                <thead className="bg-amber-100">
+                  <tr>
+                    {headerRow.map((cell, idx) => (
+                      <th
+                        key={idx}
+                        className="border border-amber-300 px-3 py-2 text-left text-sm font-semibold text-amber-900"
+                      >
+                        {cell.trim()}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, rowIdx) => (
+                    <tr
+                      key={rowIdx}
+                      className="border border-amber-200 hover:bg-amber-50"
+                    >
+                      {row.map((cell, cellIdx) => (
+                        <td
+                          key={cellIdx}
+                          className="border border-amber-200 px-3 py-2 text-sm text-zinc-700"
+                        >
+                          {cell.trim()}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>,
+          );
+          i = j;
+          continue;
+        }
+      }
+    }
+
+    // Non-table content
+    if (line.length > 0) {
+      result.push(
+        <div key={`text-${i}`}>
+          <ReactMarkdown
+            components={{
+              p: ({ node, ...props }) => (
+                <p className="mb-2" {...props} />
+              ),
+              ul: ({ node, ...props }) => (
+                <ul className="list-disc space-y-1 pl-5 mb-2" {...props} />
+              ),
+              ol: ({ node, ...props }) => (
+                <ol className="list-decimal space-y-1 pl-5 mb-2" {...props} />
+              ),
+              li: ({ node, ...props }) => (
+                <li className="mb-1" {...props} />
+              ),
+              code: ({ className, children, ...props }) => {
+                const isBlock =
+                  typeof className === "string" &&
+                  className.includes("language-");
+
+                return isBlock ? (
+                  <code
+                    className="block bg-zinc-100 p-3 rounded-lg overflow-x-auto font-mono text-xs mb-2"
+                    {...props}
+                  >
+                    {children}
+                  </code>
+                ) : (
+                  <code
+                    className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900 font-mono text-xs"
+                    {...props}
+                  >
+                    {children}
+                  </code>
+                );
+              },
+              blockquote: ({ node, ...props }) => (
+                <blockquote className="border-l-4 border-amber-300 pl-4 italic text-zinc-600 mb-2" {...props} />
+              ),
+              h1: ({ node, ...props }) => (
+                <h1 className="text-lg font-bold mb-2" {...props} />
+              ),
+              h2: ({ node, ...props }) => (
+                <h2 className="text-base font-bold mb-2" {...props} />
+              ),
+              h3: ({ node, ...props }) => (
+                <h3 className="text-sm font-bold mb-1" {...props} />
+              ),
+            }}
+          >
+            {line}
+          </ReactMarkdown>
+        </div>,
+      );
+    }
+
+    i++;
+  }
+
+  return result;
+}
+
+function parseTableRow(line: string): string[] {
+  return line
+    .split("|")
+    .map((cell) => cell.trim())
+    .filter((cell) => cell.length > 0 && cell !== "---" && !cell.match(/^-+$/));
+}
+
 export default function Home() {
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [input, setInput] = useState("");
@@ -105,59 +252,9 @@ export default function Home() {
                       return (
                         <div
                           key={`${message.id}-${index}`}
-                          className="prose prose-sm max-w-none dark:prose-invert"
+                          className="space-y-2"
                         >
-                          <ReactMarkdown
-                            components={{
-                              p: ({ node, ...props }) => (
-                                <p className="mb-2" {...props} />
-                              ),
-                              ul: ({ node, ...props }) => (
-                                <ul className="list-disc space-y-1 pl-5 mb-2" {...props} />
-                              ),
-                              ol: ({ node, ...props }) => (
-                                <ol className="list-decimal space-y-1 pl-5 mb-2" {...props} />
-                              ),
-                              li: ({ node, ...props }) => (
-                                <li className="mb-1" {...props} />
-                              ),
-                              code: ({ className, children, ...props }) => {
-                                const isBlock =
-                                  typeof className === "string" &&
-                                  className.includes("language-");
-
-                                return isBlock ? (
-                                  <code
-                                    className="block bg-zinc-100 p-3 rounded-lg overflow-x-auto font-mono text-xs mb-2"
-                                    {...props}
-                                  >
-                                    {children}
-                                  </code>
-                                ) : (
-                                  <code
-                                    className="bg-amber-100 px-1.5 py-0.5 rounded text-amber-900 font-mono text-xs"
-                                    {...props}
-                                  >
-                                    {children}
-                                  </code>
-                                );
-                              },
-                              blockquote: ({ node, ...props }) => (
-                                <blockquote className="border-l-4 border-amber-300 pl-4 italic text-zinc-600 mb-2" {...props} />
-                              ),
-                              h1: ({ node, ...props }) => (
-                                <h1 className="text-lg font-bold mb-2" {...props} />
-                              ),
-                              h2: ({ node, ...props }) => (
-                                <h2 className="text-base font-bold mb-2" {...props} />
-                              ),
-                              h3: ({ node, ...props }) => (
-                                <h3 className="text-sm font-bold mb-1" {...props} />
-                              ),
-                            }}
-                          >
-                            {part.text}
-                          </ReactMarkdown>
+                          {parseAndRenderMarkdownTables(part.text)}
                         </div>
                       );
                     }

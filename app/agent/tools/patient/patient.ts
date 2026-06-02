@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import z from "zod";
 
-import { type Patient, type PatientDetails } from "../types/patient.types";
+import { type Patient, type PatientDetails } from "../../types/patient.types";
 
 const patientSearchSchema = z
   .object({

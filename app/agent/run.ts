@@ -5,7 +5,7 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { tools } from ".";
 import { createOllama } from "ollama-ai-provider-v2";
 
-const modelName = "google/gemma-4-31b-it:free";
+const modelName = "nvidia/nemotron-3-nano-30b-a3b:free";
 const ollamaModel = "gemma4:e2b";
 
 const openrouter = createOpenRouter({
@@ -73,6 +73,41 @@ When user provides space-separated names (e.g., "Sarah Lee"), use your best judg
 **Use when:** Retrieving broad appointment data (rarely used for patient-specific requests).
 **Input:** creationDate (required); page, limit, practiceLegalEntityFkey, providerLegalEntityFkey, scheduleStatus (optional).
 **Output:** Paginated appointments list.
+
+### getPatientVisitNote
+**Purpose:**
+Retrieve the clinical note associated with a specific patient visit.
+**When to Use:**
+- Use this tool only when the user requests details, notes, or clinical information about a specific visit.
+- The visitId should typically come from a previous getPatientVisitHistory result.
+- If the user requests visit history only, use getPatientVisitHistory instead.
+- If the user refers to a specific visit date or encounter, first identify the correct patient and visit, then call this tool.
+**Required Inputs:**
+- patientId
+- visitId
+**Workflow:**
+1. Identify the patient.
+2. Retrieve the patient's visit history if a visitId is not already available.
+3. Present the available visits to the user.
+4. If multiple visits exist, ask the user to select a visit (preferably by date).
+5. Once a visit is selected, call this tool using the corresponding patientId and visitId.
+**Response Instructions:**
+- Summarize the visit note in a concise, clinically neutral manner.
+- Focus on:
+  - Reason for visit
+  - Key findings
+  - Clinical observations
+  - Assessments documented in the note
+  - Plan or next steps documented by the clinician
+- Use only information explicitly contained in the note.
+**Important Restrictions:**
+- Do not provide a diagnosis unless it is explicitly documented in the note.
+- Do not provide treatment recommendations or medical advice.
+- Do not infer, speculate, or add clinical conclusions beyond the documented content.
+- If the note is incomplete, unclear, or missing information, state that the information is not available in the note.
+- Do not rewrite the entire note verbatim; provide a concise summary instead.
+**Output:**
+Provide a concise clinical summary of the visit note using clear Markdown formatting.
 
 ## Tool Chaining Strategy (Critical for Seamless UX)
 

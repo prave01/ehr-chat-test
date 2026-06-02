@@ -5,7 +5,7 @@ import type {
   VisitHistoryResponse,
   CleanVisitHistoryItem,
   CleanVisitHistoryResponse,
-} from "../types/visit-history.types";
+} from "../../types/visit-history.types";
 
 const inputSchema = z.object({
   patientId: z

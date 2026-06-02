@@ -5,7 +5,7 @@ import type {
   CleanAppointment,
   PaginatedAppointments,
   CleanPaginatedAppointments,
-} from "../types/appointments.types";
+} from "../../types/appointments.types";
 
 const inputSchema = z.object({
   patientId: z

@@ -2,6 +2,7 @@ import { tool } from "ai";
 import z from "zod";
 
 import { type Patient, type PatientDetails } from "../../types/patient.types";
+import { ehrFetch, isEhrAuthError } from "../../ehr-fetch";
 
 const patientSearchSchema = z
   .object({
@@ -77,13 +78,8 @@ OUTPUT:
 
     console.log("Fetching patient with params:", params.toString());
 
-    const response = await fetch(
+    const response = await ehrFetch(
       `${process.env.EHR_BASE_URL}/patients?${params.toString()}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.EHR_TEMP_KEY}`,
-        },
-      },
     );
 
     if (!response.ok) {
@@ -162,13 +158,8 @@ IMPORTANT:
   }),
   execute: async ({ patientId }): Promise<CleanPatientDetailsResponse> => {
     console.log("Fetching patient details for patientId:", patientId);
-    const response = await fetch(
+    const response = await ehrFetch(
       `${process.env.EHR_BASE_URL}/patients/${patientId}/details`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.EHR_TEMP_KEY}`,
-        },
-      },
     );
 
     const result: PatientDetails = await response.json();

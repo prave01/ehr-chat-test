@@ -6,6 +6,7 @@ import type {
   PaginatedAppointments,
   CleanPaginatedAppointments,
 } from "../../types/appointments.types";
+import { ehrFetch, isEhrAuthError } from "../../ehr-fetch";
 
 const inputSchema = z.object({
   patientId: z
@@ -115,11 +116,7 @@ OUTPUT:
 
       console.log(url);
 
-      const resp = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${process.env.EHR_TEMP_KEY}`,
-        },
-      });
+      const resp = await ehrFetch(url);
 
       if (!resp.ok) {
         throw new Error(
@@ -139,6 +136,9 @@ OUTPUT:
 
       return clean;
     } catch (error) {
+      if (isEhrAuthError(error)) {
+        throw error;
+      }
       console.error("Error fetching patient appointments:", error);
       throw new Error("Unable to retrieve patient appointments at this time.");
     }

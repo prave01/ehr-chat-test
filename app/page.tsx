@@ -2,6 +2,10 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { runAgent } from "./agent/run";
+import {
+  EHR_API_KEY_REQUIRED,
+  EHR_TOKEN_EXPIRED,
+} from "./agent/errors";
 import type { UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
 
@@ -161,6 +165,7 @@ export default function Home() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const [apiKey, setApiKey] = useState("");
+  const [tokenExpired, setTokenExpired] = useState(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -174,8 +179,14 @@ export default function Home() {
       return;
     }
 
+    if (!apiKey.trim()) {
+      setError("Please enter your EHR API key before sending a message.");
+      return;
+    }
+
     setInput("");
     setError(null);
+    setTokenExpired(false);
     setStatus("submitted");
 
     const userMessage: UIMessage = {
@@ -189,7 +200,7 @@ export default function Home() {
 
     try {
       setStatus("streaming");
-      const responseText = await runAgent(nextMessages);
+      const responseText = await runAgent(nextMessages, apiKey.trim());
 
       const assistantMessage: UIMessage = {
         id: crypto.randomUUID(),
@@ -199,11 +210,19 @@ export default function Home() {
 
       setMessages((current) => [...current, assistantMessage]);
     } catch (err) {
-      setError(
+      const message =
         err instanceof Error
           ? err.message
-          : "Something went wrong while generating the response.",
-      );
+          : "Something went wrong while generating the response.";
+
+      if (message === EHR_TOKEN_EXPIRED) {
+        setTokenExpired(true);
+        setError("Your current API token is expired. Please enter a new key.");
+      } else if (message === EHR_API_KEY_REQUIRED) {
+        setError("Please enter your EHR API key before sending a message.");
+      } else {
+        setError(message);
+      }
     } finally {
       setStatus("ready");
     }
@@ -220,13 +239,26 @@ export default function Home() {
               EHR Chat Assistant
             </h1>
             <input
-              onChange={(e) => {
-                e.preventDefault();
-                e.target.value;
+              type="password"
+              value={apiKey}
+              onChange={(event) => {
+                setApiKey(event.target.value);
+                setTokenExpired(false);
+                setError(null);
               }}
-              className="rounded-lg text-sm  w-50 h-10 px-4 my-2 border border-black"
-              placeholder="Add API here"
-            ></input>
+              autoComplete="off"
+              className={`rounded-lg text-sm w-full max-w-md h-10 px-4 my-2 border ${
+                tokenExpired
+                  ? "border-red-500 bg-red-50"
+                  : "border-amber-300 bg-white"
+              }`}
+              placeholder="EHR API key"
+            />
+            {tokenExpired ? (
+              <p className="text-sm font-medium text-red-600">
+                Current token is expired. Enter a new API key to continue.
+              </p>
+            ) : null}
             <p className="text-sm text-amber-800/85">
               Clinical context copilot with server-side responses
             </p>

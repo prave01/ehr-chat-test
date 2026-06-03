@@ -1,4 +1,5 @@
 import { tool } from "ai";
+import { ehrFetch, isEhrAuthError } from "../../ehr-fetch";
 import { z } from "zod";
 import type {
   VisitHistoryItem,
@@ -127,11 +128,7 @@ OUTPUT:
       const queryString = params.toString();
       const url = `${process.env.EHR_BASE_URL}/patients/${patientId}/visit-history${queryString ? `?${queryString}` : ""}`;
 
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${process.env.EHR_TEMP_KEY}`,
-        },
-      });
+      const response = await ehrFetch(url);
 
       if (!response.ok) {
         throw new Error(
@@ -151,6 +148,9 @@ OUTPUT:
 
       return clean;
     } catch (error) {
+      if (isEhrAuthError(error)) {
+        throw error;
+      }
       console.error("Error fetching patient visit history:", error);
       throw new Error("Unable to retrieve patient visit history at this time.");
     }

@@ -4,6 +4,12 @@ import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { tools } from ".";
 import { createOllama } from "ollama-ai-provider-v2";
+import {
+  getEhrAuthFailure,
+  isEhrAuthError,
+  runWithEhrApiKey,
+} from "./ehr-fetch";
+import { EhrApiKeyRequiredError, EhrTokenExpiredError } from "./errors";
 
 const modelName = "google/gemma-4-31b-it";
 const ollamaModel = "gemma4:e2b";
@@ -227,7 +233,8 @@ If tools were used, append:
 
 List only tool names actually invoked in that response.`;
 
-export async function runAgent(UIMessages: UIMessage[]) {
+export async function runAgent(UIMessages: UIMessage[], apiKey?: string) {
+  return runWithEhrApiKey(apiKey, async () => {
   try {
     let messages = await convertToModelMessages(UIMessages);
 
@@ -272,9 +279,21 @@ export async function runAgent(UIMessages: UIMessage[]) {
       }
     }
 
+    const authFailure = getEhrAuthFailure();
+    if (authFailure === "expired") {
+      throw new EhrTokenExpiredError();
+    }
+    if (authFailure === "missing") {
+      throw new EhrApiKeyRequiredError();
+    }
+
     return finalResponse;
   } catch (err) {
+    if (isEhrAuthError(err)) {
+      throw err;
+    }
     console.log("Failed to generate response", err);
     return "I apologize, but I wasn't able to generate a response right now.";
   }
+  });
 }

@@ -1,5 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
+import { ehrFetch, isEhrAuthError } from "../../ehr-fetch";
 
 export const getDoctorAppointments = tool({
   description:
@@ -35,13 +36,8 @@ export const getDoctorAppointments = tool({
     try {
       console.log(`Fetching appointments with creationDate: ${creationDate}`);
 
-      const response = await fetch(
+      const response = await ehrFetch(
         `${process.env.EHR_BASE_URL}/appointments?creationDate=${creationDate}&page=${page}&limit=${limit}`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.EHR_TEMP_KEY}`,
-          },
-        },
       );
 
       if (!response.ok) {
@@ -53,6 +49,9 @@ export const getDoctorAppointments = tool({
       const data = await response.json();
       return data;
     } catch (error) {
+      if (isEhrAuthError(error)) {
+        throw error;
+      }
       console.error("Error fetching appointments:", error);
       throw new Error("Unable to retrieve appointments at this time.");
     }

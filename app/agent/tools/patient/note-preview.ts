@@ -1,6 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { convert } from "html-to-text";
+import { ehrFetch, isEhrAuthError } from "../../ehr-fetch";
 
 export const getPatientVistNote = tool({
   description: `
@@ -32,14 +33,15 @@ OUTPUT:
         visitId,
       );
 
-      const response = await fetch(
+      const response = await ehrFetch(
         `${process.env.EHR_BASE_URL}/patients/${patientId}/visit-history/${visitId}/note-preview`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.EHR_TEMP_KEY}`,
-          },
-        },
       );
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch note preview: ${response.status} ${response.statusText}`,
+        );
+      }
 
       const text = await response.text();
 
@@ -49,6 +51,9 @@ OUTPUT:
 
       return text_content;
     } catch (error) {
+      if (isEhrAuthError(error)) {
+        throw error;
+      }
       console.error("Error fetching note preview:", error);
       throw new Error("Unable to retrieve note preview at this time.");
     }

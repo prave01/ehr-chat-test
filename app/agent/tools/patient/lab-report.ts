@@ -1,5 +1,6 @@
 import { tool } from "ai";
 import z from "zod";
+import { ehrFetch, isEhrAuthError } from "../../ehr-fetch";
 
 export const getPatientLabReport = tool({
   description: `
@@ -10,13 +11,8 @@ Retrieve a patient's lab report for a specific lab test using their patientId an
   }),
   execute: async ({ patientId }) => {
     try {
-      const response = await fetch(
+      const response = await ehrFetch(
         `${process.env.EHR_BASE_URL}/patients/${patientId}/lab-results`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.EHR_TEMP_KEY}`,
-          },
-        },
       );
 
       if (!response.ok) {
@@ -27,6 +23,9 @@ Retrieve a patient's lab report for a specific lab test using their patientId an
 
       return data;
     } catch (err) {
+      if (isEhrAuthError(err)) {
+        throw err;
+      }
       console.error("Error fetching lab report:", err);
       throw new Error("Failed to fetch lab report. Please try again later.");
     }

@@ -1,11 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { runAgent } from "./agent/run";
-import {
-  EHR_API_KEY_REQUIRED,
-  EHR_TOKEN_EXPIRED,
-} from "./agent/errors";
+import { runAgent } from "./agent/actions";
 import type { UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
 
@@ -200,29 +196,29 @@ export default function Home() {
 
     try {
       setStatus("streaming");
-      const responseText = await runAgent(nextMessages, apiKey.trim());
+      const result = await runAgent(nextMessages, apiKey.trim());
+
+      if (!result.ok) {
+        if (result.code === "token_expired") {
+          setTokenExpired(true);
+        }
+        setError(result.message);
+        return;
+      }
 
       const assistantMessage: UIMessage = {
         id: crypto.randomUUID(),
         role: "assistant",
-        parts: [{ type: "text", text: responseText }],
+        parts: [{ type: "text", text: result.text }],
       };
 
       setMessages((current) => [...current, assistantMessage]);
     } catch (err) {
-      const message =
+      setError(
         err instanceof Error
           ? err.message
-          : "Something went wrong while generating the response.";
-
-      if (message === EHR_TOKEN_EXPIRED) {
-        setTokenExpired(true);
-        setError("Your current API token is expired. Please enter a new key.");
-      } else if (message === EHR_API_KEY_REQUIRED) {
-        setError("Please enter your EHR API key before sending a message.");
-      } else {
-        setError(message);
-      }
+          : "Something went wrong while generating the response.",
+      );
     } finally {
       setStatus("ready");
     }

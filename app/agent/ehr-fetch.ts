@@ -10,7 +10,10 @@ type EhrContext = {
 
 const ehrContext = new AsyncLocalStorage<EhrContext>();
 
-export function runWithEhrApiKey<T>(apiKey: string | undefined, fn: () => T): T {
+export function runWithEhrApiKey<T>(
+  apiKey: string | undefined,
+  fn: () => Promise<T>,
+): Promise<T> {
   const trimmed = apiKey?.trim();
   return ehrContext.run({ apiKey: trimmed || undefined }, fn);
 }

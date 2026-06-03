@@ -160,6 +160,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
+  const [apiKey, setApiKey] = useState("");
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -217,6 +219,14 @@ export default function Home() {
             <h1 className="text-lg font-semibold tracking-tight sm:text-xl">
               EHR Chat Assistant
             </h1>
+            <input
+              onChange={(e) => {
+                e.preventDefault();
+                e.target.value;
+              }}
+              className="rounded-lg text-sm  w-50 h-10 px-4 my-2 border border-black"
+              placeholder="Add API here"
+            ></input>
             <p className="text-sm text-amber-800/85">
               Clinical context copilot with server-side responses
             </p>

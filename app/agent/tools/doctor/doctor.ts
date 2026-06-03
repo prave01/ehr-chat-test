@@ -3,8 +3,10 @@ import { z } from "zod";
 import { ehrFetch, isEhrAuthError } from "../../ehr-fetch";
 
 export const getDoctorAppointments = tool({
-  description:
-    "Retrieves a paginated list of appointments with patient details and optional filters.",
+  description: `Retrieves a paginated list of appointments for a doctor based on the creation date and optional filters.
+    Note: 
+    - Both provider and doctor are same thing, so providerLegalEntityFkey is the filter to use for doctor.
+`,
   inputSchema: z.object({
     creationDate: z.string().describe("Creation date filter (mandatory)"),
     page: z

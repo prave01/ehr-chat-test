@@ -86,18 +86,14 @@ function parseAndRenderMarkdownTables(text: string): React.ReactNode[] {
         <div key={`text-${i}`}>
           <ReactMarkdown
             components={{
-              p: ({ node, ...props }) => (
-                <p className="mb-2" {...props} />
-              ),
+              p: ({ node, ...props }) => <p className="mb-2" {...props} />,
               ul: ({ node, ...props }) => (
                 <ul className="list-disc space-y-1 pl-5 mb-2" {...props} />
               ),
               ol: ({ node, ...props }) => (
                 <ol className="list-decimal space-y-1 pl-5 mb-2" {...props} />
               ),
-              li: ({ node, ...props }) => (
-                <li className="mb-1" {...props} />
-              ),
+              li: ({ node, ...props }) => <li className="mb-1" {...props} />,
               code: ({ className, children, ...props }) => {
                 const isBlock =
                   typeof className === "string" &&
@@ -120,7 +116,10 @@ function parseAndRenderMarkdownTables(text: string): React.ReactNode[] {
                 );
               },
               blockquote: ({ node, ...props }) => (
-                <blockquote className="border-l-4 border-amber-300 pl-4 italic text-zinc-600 mb-2" {...props} />
+                <blockquote
+                  className="border-l-4 border-amber-300 pl-4 italic text-zinc-600 mb-2"
+                  {...props}
+                />
               ),
               h1: ({ node, ...props }) => (
                 <h1 className="text-lg font-bold mb-2" {...props} />
@@ -237,11 +236,10 @@ export default function Home() {
             messages.map((message) => (
               <article
                 key={message.id}
-                className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
-                  message.role === "user"
+                className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${message.role === "user"
                     ? "ml-auto bg-zinc-900 text-zinc-100"
                     : "mr-auto border border-amber-200 bg-white text-zinc-900"
-                }`}
+                  }`}
               >
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider opacity-70">
                   {message.role === "user" ? "You" : "Assistant"}
@@ -264,6 +262,27 @@ export default function Home() {
                 </div>
               </article>
             ))
+          )}
+
+          {isStreaming && (
+            <article className="mr-auto max-w-[85%] rounded-2xl border border-amber-200 bg-white px-4 py-3 shadow-sm">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider opacity-70">
+                Assistant
+              </p>
+
+              <div className="flex items-center gap-1">
+                <span className="h-2 w-2 animate-bounce rounded-full bg-amber-500" />
+                <span
+                  className="h-2 w-2 animate-bounce rounded-full bg-amber-500"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <span
+                  className="h-2 w-2 animate-bounce rounded-full bg-amber-500"
+                  style={{ animationDelay: "300ms" }}
+                />
+                <span className="ml-2 text-sm text-zinc-500">Thinking...</span>
+              </div>
+            </article>
           )}
 
           {error ? (

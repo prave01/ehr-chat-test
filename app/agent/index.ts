@@ -1,14 +1,16 @@
-import { getAppointments } from "./tools/doctor/doctor";
+import { getDoctorAppointments } from "./tools/doctor/doctor";
 import { getPatient, getPatientDetails } from "./tools/patient/patient";
 import { getPatientAppointments } from "./tools/patient/appointments";
 import { getPatientVisitHistory } from "./tools/patient/visit-history";
 import { getPatientVistNote } from "./tools/patient/note-preview";
+import { getPatientLabReport } from "./tools/patient/lab-report";
 
 export const tools = {
-  getAppointments,
+  getDoctorAppointments,
   getPatient,
   getPatientDetails,
   getPatientAppointments,
   getPatientVisitHistory,
   getPatientVistNote,
+  getPatientLabReport
 };

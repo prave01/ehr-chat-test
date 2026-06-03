@@ -5,7 +5,7 @@ import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { tools } from ".";
 import { createOllama } from "ollama-ai-provider-v2";
 
-const modelName = "nvidia/nemotron-3-nano-30b-a3b:free";
+const modelName = "google/gemma-4-31b-it";
 const ollamaModel = "gemma4:e2b";
 
 const openrouter = createOpenRouter({

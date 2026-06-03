@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import { z } from "zod";
 
-export const getAppointments = tool({
+export const getDoctorAppointments = tool({
   description:
     "Retrieves a paginated list of appointments with patient details and optional filters.",
   inputSchema: z.object({

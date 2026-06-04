@@ -18,12 +18,12 @@ const inputSchema = z.object({
     .number()
     .int()
     .optional()
-    .describe("Query parameter: page (default: 1)"),
+    .describe("Query parameter: page (default: 0)"),
   limit: z
     .number()
     .int()
     .optional()
-    .describe("Query parameter: limit (default: 50)"),
+    .describe("Query parameter: limit (default: 0)"),
 });
 
 function stripRestrictedFields(obj: Record<string, unknown>) {

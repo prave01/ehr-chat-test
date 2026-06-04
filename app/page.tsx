@@ -243,11 +243,10 @@ export default function Home() {
                 setError(null);
               }}
               autoComplete="off"
-              className={`rounded-lg text-sm w-full max-w-md h-10 px-4 my-2 border ${
-                tokenExpired
+              className={`rounded-lg text-sm w-full max-w-md h-10 px-4 my-2 border ${tokenExpired
                   ? "border-red-500 bg-red-50"
                   : "border-amber-300 bg-white"
-              }`}
+                }`}
               placeholder="EHR API key"
             />
             {tokenExpired ? (

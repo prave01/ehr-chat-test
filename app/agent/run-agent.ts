@@ -2,6 +2,7 @@ import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { tools } from ".";
 import { getEhrAuthFailure, runWithEhrApiKey } from "./ehr-fetch";
+import { getSystemPrompt } from "../../lib/prompts/index";
 import type { AgentErrorCode, RunAgentResult } from "./result";
 
 const modelName = "google/gemma-4-31b-it";
@@ -11,11 +12,14 @@ const openrouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_KEY!,
 });
 
+const systemPrompt = getSystemPrompt();
+
 const SYSTEM_PROMPT = `
 You are an AI assistant for an Electronic Health Record (EHR) system.
 
 ## Core Responsibilities
-- Assist users with patient-related and clinical workflow questions.
+- Assist users w
+ith patient-related and clinical workflow questions.
 - Provide concise, accurate, and clinically grounded responses.
 - Clearly distinguish confirmed facts from uncertainty.
 - Never fabricate patient data, medical facts, IDs, or system information.
@@ -219,6 +223,8 @@ Always follow this order unless all required information is already available.
 * Treat all date and time calculations as timezone-aware.
 * Use the DateTime tool whenever current date or time is required for reasoning.
 * Do not rely on model knowledge for current dates, times, weekdays, or date calculations.
+* If the query is just a month and date, assume the current year unless the current date is past that month and date, in which case assume the next year. Always confirm this assumption with the user.
+* Use the getCurrentDateTime tool to obtain the current date and time in US Eastern Time before interpreting any relative date references or performing any date calculations.
 
 ## Current Date and Time
 * Before interpreting relative dates such as:
@@ -416,6 +422,13 @@ Retrieve the clinical note associated with a specific patient visit.
 **Output:**
 Provide a concise clinical summary of the visit note using clear Markdown formatting.
 
+### getLabOrders
+**Purpose:** Retrieve paginated lab orders with optional filters.
+**Use when:** User asks about lab orders, ordered tests, or lab workflow for a patient, provider, visit, or date range.
+**Input:** fromDate, toDate, providerLegalEntityFkey, patientFkey, emrPatConsFkey, page, limit (all optional).
+**Output:** Paginated list of lab orders.
+**Note:** Resolve patientFkey via getPatient when only a name is given; emrPatConsFkey often comes from getPatientVisitHistory (emrPatConsPkey).
+
 ##getListOfProvidersLegalEntities
 **Purpose:** Retrieve the list of legal entities associated with a provider.
 **Use when:** You need to understand the provider's affiliations, practices, or locations.
@@ -581,7 +594,7 @@ export async function runAgentInternal(
         const result = streamText({
           model: openrouter.languageModel(modelName),
           messages: messages,
-          system: SYSTEM_PROMPT,
+          system: systemPrompt,
           tools: tools,
         });
 

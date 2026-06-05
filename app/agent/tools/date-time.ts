@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import z from "zod";
 
-export const getDateTime = tool({
+export const getCurrentDateTime = tool({
   description: "Get the current date and time in US Eastern Time",
   inputSchema: z.object({}),
   execute: async () => {
